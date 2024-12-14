@@ -2,7 +2,6 @@ import csv
 import base64
 from fileinput import close
 
-
 def encode(string: str):
     string_to_byte = string.encode('utf-8')
     base64_encoded = base64.b64encode(string_to_byte)
@@ -12,6 +11,18 @@ def decode(string: str):
     string_to_byte = string.encode('utf-8')
     base64_decoded = base64.b64decode(string_to_byte)
     return base64_decoded.decode('utf-8')
+
+def check_username(username: str, file: list):
+    if len(username) == 0:
+        return False, "The length should be greater than 0"
+    if ' '  in username:
+        return False, "You cannot use spaces in username"
+    if username[0].isnumeric():
+        return False, "First character cannot be a number"
+    if username in file:
+        return False, "The username already exists"
+    return True, "Success"
+
 
 while True:
     print("Hello there!, Would you like to login or Sign-up.")
@@ -24,14 +35,31 @@ while True:
             reader = csv.DictReader(details)
 
     elif user_inp == 2:
-        with open('details.csv', 'a') as details:
-            writer = csv.DictWriter(details, fieldnames=['user_name', 'password', 'status'])
+        l = list()
+        with open('details.csv', 'r') as det:
+            reader = csv.DictReader(det)
+            for line in reader:
+                l.append(decode(line['user_name']))
 
-            user_name = input("Please enter your username: ")
+
+        with open('details.csv', 'a+') as details:
+            writer = csv.DictWriter(details, fieldnames=['user_name', 'password', 'status'])
+            for i in l:
+                print(i)
+
+            while True:
+                user_name = input("Please enter your username: ")
+                suc, mess = check_username(user_name, l)
+                if suc:
+                    break
+                else:
+                    print(mess)
+
+
             password = input("Please enter your password: ")
             confirm_password = input("Please confirm your password: ")
 
-            if (password == confirm_password):
+            if password == confirm_password:
                 status = input("Please enter a status: ")
                 dic = dict()
                 dic['user_name'] = encode(user_name)
